@@ -1,53 +1,87 @@
 <template>
-  <div
-    id="q-app "
-    class="flex bg-gray-200 p-6 md:flex-row-reverse flex-no-wrap flex-col"
-  >
-    <div class="w-full md:w-1/4 ">
-      <app-filters></app-filters>
-    </div>
-    <div class="w-full md:w-3/4 user-container md:p-10 md:mx-2 mt-4 md:mt-0 ">
-      <div class="text-gray-600 p-4">Uploaded CV's</div>
-      <app-users
-        v-for="(user, index) in filteredList"
-        :key="index"
-        :user="user"
-      >
-      </app-users>
+  <div id="q-app h-screen flex items-center bg-red">
+    <div class="w-3/4 m-auto">
+      <Attachment />
     </div>
   </div>
 </template>
 
 <script>
-import Filters from "./components/Filters";
-import Users from "./components/Users";
+import Attachment from "./components/Attachment";
+
+import vue2Dropzone from "vue2-dropzone";
+import "vue2-dropzone/dist/vue2Dropzone.min.css";
+
 export default {
   components: {
-    appUsers: Users,
-    appFilters: Filters
+    vueDropzone: vue2Dropzone,
+    Attachment: Attachment
   },
   name: "App",
-
-  created() {
-    this.$store.dispatch("getUsers");
-  },
-
-  computed: {
-    filteredList() {
-      if (this.$store.getters.getUsers !== "") {
-        console.log("notempty");
-        return this.$store.getters.getUsers.filter(user => {
-          return user.name
-            .toLowerCase()
-            .includes(this.$store.getters.search.toLowerCase());
-        });
-      } else {
-        return this.$store.getters.getUsers;
+  data() {
+    return {
+      arr: [],
+      msg: "Welcome to Your Vue.js App",
+      tempAttachments: [],
+      attachments: [],
+      dropzoneOptions: {
+        // The Url Where Dropped or Selected files will be sent
+        url: `https://httpbin.org/post`,
+        // File Size allowed in MB
+        maxFilesize: 102400000,
+        // Authentication Headers like Access_Token of your application
+        headers: {
+          Authorization: `Access Token`
+        },
+        // The way you want to receive the files in the server
+        paramName: function(n) {
+          return "file[]";
+        },
+        dictDefaultMessage: "Upload Files Here xD",
+        includeStyling: false,
+        previewsContainer: false,
+        thumbnailWidth: 250,
+        thumbnailHeight: 140,
+        uploadMultiple: true,
+        parallelUploads: 20
       }
+    };
+  },
+  methods: {
+    upload() {
+      this.arr.push(this.$refs.files.files);
+      console.log(this.arr);
+      // this.encodeToBase64(this.$refs.files.files);
+    },
+    async encodeToBase64(files) {
+      console.log(files);
+      var attach = [];
+      var reader = [];
+
+      // loop through each of the files in q-uploader
+
+      attach.push(files);
+      // attach[i] = await this.singleFileToBase64(i, files, reader);
+
+      console.log(attach);
     },
 
-    getUsers() {
-      return this.$store.getters.getUsers;
+    singleFileToBase64(i, files, reader) {
+      reader[i] = new FileReader();
+      // read the file into a base64 format
+      reader[i].readAsDataURL(files[i]);
+
+      return new Promise((resolve, reject) => {
+        reader[i].onerror = () => {
+          reader[i].abort();
+          reject("Insert error message here");
+        };
+
+        // return the base 64 string
+        reader[i].onload = function() {
+          resolve(reader[i].result);
+        };
+      });
     }
   }
 };
